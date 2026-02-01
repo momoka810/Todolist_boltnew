@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todoリストアプリ</title>
+    <meta property="og:image" content="https://bolt.new/static/og_default.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://bolt.new/static/og_default.png">
+</head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <h1>Todoリスト</h1>
+      </header>
+
+      <main class="app-main">
+        <!-- Todo追加フォーム -->
+        <section class="add-todo-section">
+          <h2>新しいTodoを追加</h2>
+          <form id="add-todo-form" class="add-todo-form">
+            <div class="form-group">
+              <label for="todo-input">内容</label>
+              <input
+                type="text"
+                id="todo-input"
+                class="todo-input"
+                placeholder="Todoを入力してください"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="todo-status">ステータス</label>
+              <select id="todo-status" class="todo-status-select">
+                <option value="todo">未完了</option>
+                <option value="doing">処理中</option>
+                <option value="done">完了</option>
+              </select>
+            </div>
+            <button type="submit" class="add-button">追加</button>
+          </form>
+        </section>
+
+        <!-- Todo一覧 -->
+        <section class="todo-list-section">
+          <h2>Todo一覧</h2>
+          <div id="todo-list" class="todo-list">
+            <!-- ここにTodoが表示されます -->
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
