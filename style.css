@@ -154,8 +154,9 @@ body {
 .todo-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.25rem;
   border-radius: 8px;
   background-color: #1a1a1a;
   border-left: 4px solid;
@@ -179,17 +180,60 @@ body {
   border-left-color: #10b981;
 }
 
-.todo-text {
+.todo-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.todo-text {
   text-align: left;
   font-size: 1rem;
   color: rgba(255, 255, 255, 0.87);
   word-break: break-word;
+  line-height: 1.5;
 }
 
 .status-done .todo-text {
   text-decoration: line-through;
   opacity: 0.6;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.status-badge.status-todo {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.status-badge.status-doing {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.status-badge.status-done {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.todo-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .status-select {
@@ -222,6 +266,75 @@ body {
 
 .delete-button:hover {
   background-color: #b91c1c;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-message {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-subtext {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.notification {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-weight: 500;
+  animation: slideIn 0.3s ease-out;
+  z-index: 1000;
+  max-width: 400px;
+}
+
+.notification.hide {
+  animation: slideOut 0.3s ease-out forwards;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }
 
 @media (prefers-color-scheme: light) {
@@ -271,7 +384,26 @@ body {
   }
 
   .empty-message {
-    color: #666;
+    color: rgba(33, 53, 71, 0.7);
+  }
+
+  .empty-subtext {
+    color: rgba(33, 53, 71, 0.5);
+  }
+
+  .status-badge.status-todo {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+  }
+
+  .status-badge.status-doing {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+  }
+
+  .status-badge.status-done {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #059669;
   }
 }
 
@@ -292,11 +424,27 @@ body {
   .todo-item {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.75rem;
+    gap: 1rem;
+  }
+
+  .todo-content {
+    gap: 0.5rem;
+  }
+
+  .todo-controls {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
   .status-select,
   .delete-button {
     width: 100%;
+  }
+
+  .notification {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
   }
 }
