@@ -204,15 +204,91 @@ function createTodoElement(todo) {
 
   todoContent.appendChild(todoText);
 
-  // 【追加機能4】期日表示
+  // 【追加機能4】期日表示と編集
+  const dueDateContainer = document.createElement('div');
+  dueDateContainer.className = 'due-date-container';
+
   if (todo.dueDate) {
     const dueDateBadge = document.createElement('span');
     const urgency = getDueDateUrgency(todo.dueDate);
     dueDateBadge.className = `due-date-badge ${urgency ? `urgency-${urgency}` : ''}`;
     dueDateBadge.textContent = `📅 ${formatDueDate(todo.dueDate)}`;
-    todoContent.appendChild(dueDateBadge);
+    dueDateBadge.style.cursor = 'pointer';
+    dueDateBadge.title = '期日を編集';
+
+    // 期日編集入力欄（初期状態は非表示）
+    const dueDateInput = document.createElement('input');
+    dueDateInput.type = 'date';
+    dueDateInput.className = 'due-date-edit-input';
+    dueDateInput.value = todo.dueDate;
+    dueDateInput.style.display = 'none';
+
+    // バッジクリックで編集モードに切り替え
+    dueDateBadge.addEventListener('click', () => {
+      dueDateBadge.style.display = 'none';
+      dueDateInput.style.display = 'inline-block';
+      dueDateInput.focus();
+    });
+
+    // 日付変更時の処理
+    dueDateInput.addEventListener('change', () => {
+      const newDueDate = dueDateInput.value || null;
+      updateTodoDueDate(todo.id, newDueDate);
+      renderTodos();
+      showNotification('期日を更新しました');
+    });
+
+    // フォーカス外れたら表示モードに戻る
+    dueDateInput.addEventListener('blur', () => {
+      dueDateInput.style.display = 'none';
+      dueDateBadge.style.display = 'inline-block';
+    });
+
+    dueDateContainer.appendChild(dueDateBadge);
+    dueDateContainer.appendChild(dueDateInput);
+  } else {
+    // 期日が設定されていない場合は「期日を設定」ボタン
+    const addDueDateButton = document.createElement('button');
+    addDueDateButton.className = 'add-due-date-button';
+    addDueDateButton.textContent = '📅 期日を設定';
+    addDueDateButton.type = 'button';
+
+    // 期日設定用の入力欄（初期状態は非表示）
+    const dueDateInput = document.createElement('input');
+    dueDateInput.type = 'date';
+    dueDateInput.className = 'due-date-edit-input';
+    dueDateInput.style.display = 'none';
+
+    // ボタンクリックで入力欄を表示
+    addDueDateButton.addEventListener('click', () => {
+      addDueDateButton.style.display = 'none';
+      dueDateInput.style.display = 'inline-block';
+      dueDateInput.focus();
+    });
+
+    // 日付選択時の処理
+    dueDateInput.addEventListener('change', () => {
+      const newDueDate = dueDateInput.value || null;
+      if (newDueDate) {
+        updateTodoDueDate(todo.id, newDueDate);
+        renderTodos();
+        showNotification('期日を設定しました');
+      }
+    });
+
+    // フォーカス外れたら元に戻る
+    dueDateInput.addEventListener('blur', () => {
+      if (!dueDateInput.value) {
+        dueDateInput.style.display = 'none';
+        addDueDateButton.style.display = 'inline-block';
+      }
+    });
+
+    dueDateContainer.appendChild(addDueDateButton);
+    dueDateContainer.appendChild(dueDateInput);
   }
 
+  todoContent.appendChild(dueDateContainer);
   todoContent.appendChild(statusBadge);
 
   // コントロールエリア
@@ -310,7 +386,7 @@ function createArchivedTodoElement(todo) {
 
   todoContent.appendChild(todoText);
 
-  // 【追加機能4】期日表示
+  // 【追加機能4】期日表示（アーカイブでは読み取り専用）
   if (todo.dueDate) {
     const dueDateBadge = document.createElement('span');
     const urgency = getDueDateUrgency(todo.dueDate);
