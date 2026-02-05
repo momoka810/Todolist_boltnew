@@ -448,3 +448,254 @@ body {
     max-width: none;
   }
 }
+
+/* 【追加機能1】状態サマリー表示 */
+.status-summary {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  min-width: 80px;
+  transition: transform 0.2s;
+}
+
+.summary-item:hover {
+  transform: translateY(-2px);
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.25rem;
+}
+
+.summary-count {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.summary-todo .summary-count {
+  color: #ef4444;
+}
+
+.summary-doing .summary-count {
+  color: #f59e0b;
+}
+
+.summary-done .summary-count {
+  color: #10b981;
+}
+
+.summary-total {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+}
+
+.summary-total .summary-count {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* 【追加機能2】アーカイブセクション */
+.archive-section {
+  background-color: #2a2a2a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+}
+
+.archive-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.archive-header h2 {
+  font-size: 1.5em;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.toggle-archive-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background-color: #1a1a1a;
+  color: rgba(255, 255, 255, 0.87);
+  cursor: pointer;
+  transition: background-color 0.25s, border-color 0.25s;
+}
+
+.toggle-archive-button:hover {
+  background-color: #333;
+  border-color: #667eea;
+}
+
+.archive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.archived-item {
+  opacity: 0.7;
+}
+
+.archive-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  background-color: #6b7280;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.25s;
+}
+
+.archive-button:hover {
+  background-color: #4b5563;
+}
+
+.restore-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  background-color: #059669;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.25s;
+}
+
+.restore-button:hover {
+  background-color: #047857;
+}
+
+/* 【追加機能3】ステータス変更時のアニメーション */
+@keyframes statusChange {
+  0% {
+    transform: scale(1);
+    background-color: inherit;
+  }
+  50% {
+    transform: scale(1.02);
+    background-color: rgba(102, 126, 234, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    background-color: inherit;
+  }
+}
+
+@keyframes archiveSlide {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes deleteScale {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+.status-changing {
+  animation: statusChange 0.3s ease-out;
+}
+
+.archiving {
+  animation: archiveSlide 0.3s ease-out;
+}
+
+.deleting {
+  animation: deleteScale 0.3s ease-out;
+}
+
+/* ライトモード対応 */
+@media (prefers-color-scheme: light) {
+  .status-summary {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .summary-item {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .summary-label {
+    color: rgba(33, 53, 71, 0.7);
+  }
+
+  .archive-section {
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .archive-header h2 {
+    color: #213547;
+  }
+
+  .toggle-archive-button {
+    background-color: #f9f9f9;
+    border-color: #ddd;
+    color: #213547;
+  }
+
+  .toggle-archive-button:hover {
+    background-color: #f0f0f0;
+    border-color: #667eea;
+  }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 640px) {
+  .status-summary {
+    gap: 0.5rem;
+  }
+
+  .summary-item {
+    padding: 0.5rem 1rem;
+    min-width: 70px;
+  }
+
+  .summary-count {
+    font-size: 1.5rem;
+  }
+
+  .archive-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .toggle-archive-button {
+    width: 100%;
+  }
+}

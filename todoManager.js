@@ -54,7 +54,8 @@ export function addTodo(text, status = 'todo') {
     id: newId,
     text: text.trim(),
     status: status,
-    createdAt: new Date().toISOString() // 作成日時を記録（ソート用）
+    createdAt: new Date().toISOString(), // 作成日時を記録（ソート用）
+    archived: false // 【追加機能2】アーカイブフラグを追加
   };
 
   todos.push(newTodo);
@@ -104,10 +105,14 @@ export function updateTodoStatus(id, newStatus) {
 /**
  * 完了Todoを下に表示するようソートして取得
  * 【改善】完了したTodoが自動的に一覧の下に移動
+ * 【追加機能2】アーカイブされたTodoを除外
  * @returns {Array} ソート済みのTodo配列
  */
 export function getSortedTodos() {
   const todos = getTodos();
+
+  // アーカイブされていないTodoのみをフィルタ
+  const activeTodos = todos.filter(todo => !todo.archived);
 
   // ステータスの優先順位（未完了→処理中→完了の順）
   const statusPriority = {
@@ -116,7 +121,7 @@ export function getSortedTodos() {
     'done': 2
   };
 
-  return todos.sort((a, b) => {
+  return activeTodos.sort((a, b) => {
     // まずステータスで並び替え
     const priorityDiff = statusPriority[a.status] - statusPriority[b.status];
     if (priorityDiff !== 0) return priorityDiff;
@@ -124,4 +129,66 @@ export function getSortedTodos() {
     // 同じステータス内では作成日時順（古い順）
     return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
   });
+}
+
+/**
+ * 【追加機能2】アーカイブされたTodoを取得
+ * @returns {Array} アーカイブ済みTodoの配列
+ */
+export function getArchivedTodos() {
+  const todos = getTodos();
+  return todos.filter(todo => todo.archived);
+}
+
+/**
+ * 【追加機能2】Todoをアーカイブ（一時非表示）する
+ * @param {number} id - アーカイブするTodoのID
+ * @returns {Object|null} アーカイブされたTodo、見つからない場合はnull
+ */
+export function archiveTodo(id) {
+  const todos = getTodos();
+  const todo = todos.find(todo => todo.id === id);
+
+  if (!todo) {
+    return null;
+  }
+
+  todo.archived = true;
+  saveTodos(todos);
+
+  return todo;
+}
+
+/**
+ * 【追加機能2】Todoをアーカイブから復元する
+ * @param {number} id - 復元するTodoのID
+ * @returns {Object|null} 復元されたTodo、見つからない場合はnull
+ */
+export function unarchiveTodo(id) {
+  const todos = getTodos();
+  const todo = todos.find(todo => todo.id === id);
+
+  if (!todo) {
+    return null;
+  }
+
+  todo.archived = false;
+  saveTodos(todos);
+
+  return todo;
+}
+
+/**
+ * 【追加機能1】ステータス別のTodo件数を取得
+ * @returns {Object} ステータス別の件数オブジェクト
+ */
+export function getStatusSummary() {
+  const todos = getSortedTodos(); // アーカイブされていないTodoのみ
+
+  return {
+    todo: todos.filter(t => t.status === 'todo').length,
+    doing: todos.filter(t => t.status === 'doing').length,
+    done: todos.filter(t => t.status === 'done').length,
+    total: todos.length
+  };
 }

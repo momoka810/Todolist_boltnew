@@ -8,7 +8,16 @@
  * ・リアルタイムなUXの実現：通知、アニメーションなど
  */
 
-import { getSortedTodos, addTodo, deleteTodo, updateTodoStatus } from './todoManager.js';
+import {
+  getSortedTodos,
+  addTodo,
+  deleteTodo,
+  updateTodoStatus,
+  getArchivedTodos,
+  archiveTodo,
+  unarchiveTodo,
+  getStatusSummary
+} from './todoManager.js';
 
 // ステータスの日本語表示名
 const STATUS_LABELS = {
@@ -20,10 +29,15 @@ const STATUS_LABELS = {
 /**
  * Todo一覧を描画
  * 【改善】完了Todoを自動的に下に表示
+ * 【追加機能1】サマリー表示を更新
+ * 【追加機能2】アーカイブセクションも更新
  */
 export function renderTodos() {
   const todos = getSortedTodos(); // ソート済みのTodoを取得
   const todoList = document.getElementById('todo-list');
+
+  // 【追加機能1】サマリー表示を更新
+  renderStatusSummary();
 
   // リストをクリア
   todoList.innerHTML = '';
@@ -31,14 +45,68 @@ export function renderTodos() {
   // Todoが存在しない場合の空状態UI
   if (todos.length === 0) {
     renderEmptyState(todoList);
-    return;
+  } else {
+    // 各Todoを描画
+    todos.forEach(todo => {
+      const todoItem = createTodoElement(todo);
+      todoList.appendChild(todoItem);
+    });
   }
 
-  // 各Todoを描画
-  todos.forEach(todo => {
-    const todoItem = createTodoElement(todo);
-    todoList.appendChild(todoItem);
-  });
+  // 【追加機能2】アーカイブリストも更新
+  renderArchivedTodos();
+}
+
+/**
+ * 【追加機能1】状態サマリーを描画
+ * Todoの件数を直感的に表示
+ */
+function renderStatusSummary() {
+  const summary = getStatusSummary();
+  const summaryContainer = document.getElementById('status-summary');
+
+  summaryContainer.innerHTML = `
+    <div class="summary-item summary-todo">
+      <span class="summary-label">未完了</span>
+      <span class="summary-count">${summary.todo}</span>
+    </div>
+    <div class="summary-item summary-doing">
+      <span class="summary-label">処理中</span>
+      <span class="summary-count">${summary.doing}</span>
+    </div>
+    <div class="summary-item summary-done">
+      <span class="summary-label">完了</span>
+      <span class="summary-count">${summary.done}</span>
+    </div>
+    <div class="summary-item summary-total">
+      <span class="summary-label">合計</span>
+      <span class="summary-count">${summary.total}</span>
+    </div>
+  `;
+}
+
+/**
+ * 【追加機能2】アーカイブされたTodoを描画
+ */
+function renderArchivedTodos() {
+  const archivedTodos = getArchivedTodos();
+  const archiveList = document.getElementById('archive-list');
+
+  archiveList.innerHTML = '';
+
+  if (archivedTodos.length === 0) {
+    const emptyMessage = document.createElement('p');
+    emptyMessage.className = 'empty-message';
+    emptyMessage.textContent = 'アーカイブされたTodoはありません';
+    emptyMessage.style.textAlign = 'center';
+    emptyMessage.style.padding = '2rem';
+    archiveList.appendChild(emptyMessage);
+  } else {
+    archivedTodos.forEach(todo => {
+      const todoItem = createArchivedTodoElement(todo);
+      archiveList.appendChild(todoItem);
+    });
+  }
 }
 
 /**
@@ -72,6 +140,8 @@ function renderEmptyState(container) {
 /**
  * Todo要素を作成
  * 【改善】ステータスバッジで視覚的に状態を表示
+ * 【追加機能2】アーカイブボタンを追加
+ * 【追加機能3】ステータス変更時のアニメーション
  * @param {Object} todo - Todoオブジェクト
  * @returns {HTMLElement} Todo要素
  */
@@ -110,12 +180,31 @@ function createTodoElement(todo) {
     <option value="done" ${todo.status === 'done' ? 'selected' : ''}>完了</option>
   `;
 
-  // ステータス変更イベント：変更直後にUIを更新
+  // 【追加機能3】ステータス変更イベント：変更直後にアニメーション付きでUIを更新
   statusSelect.addEventListener('change', (e) => {
     const newStatus = e.target.value;
     updateTodoStatus(todo.id, newStatus);
-    renderTodos(); // 即座に再描画
-    showNotification(`ステータスを「${STATUS_LABELS[newStatus]}」に変更しました`);
+
+    // アニメーション：変更されたアイテムを一時的にハイライト
+    todoItem.classList.add('status-changing');
+    setTimeout(() => {
+      renderTodos(); // 即座に再描画
+      showNotification(`ステータスを「${STATUS_LABELS[newStatus]}」に変更しました`);
+    }, 300);
+  });
+
+  // 【追加機能2】アーカイブボタン
+  const archiveButton = document.createElement('button');
+  archiveButton.className = 'archive-button';
+  archiveButton.textContent = 'アーカイブ';
+  archiveButton.addEventListener('click', () => {
+    // アーカイブアニメーション
+    todoItem.classList.add('archiving');
+    setTimeout(() => {
+      archiveTodo(todo.id);
+      renderTodos();
+      showNotification('Todoをアーカイブしました');
+    }, 300);
   });
 
   // 削除ボタン
@@ -126,16 +215,83 @@ function createTodoElement(todo) {
   // 【改善】削除前に確認ダイアログを表示
   deleteButton.addEventListener('click', () => {
     if (confirm(`「${todo.text}」を削除しますか？`)) {
-      deleteTodo(todo.id);
-      renderTodos(); // 即座に再描画
-      showNotification('Todoを削除しました');
+      // 削除アニメーション
+      todoItem.classList.add('deleting');
+      setTimeout(() => {
+        deleteTodo(todo.id);
+        renderTodos(); // 即座に再描画
+        showNotification('Todoを削除しました');
+      }, 300);
     }
   });
 
   todoControls.appendChild(statusSelect);
+  todoControls.appendChild(archiveButton);
   todoControls.appendChild(deleteButton);
 
   // 要素を組み立て
+  todoItem.appendChild(todoContent);
+  todoItem.appendChild(todoControls);
+
+  return todoItem;
+}
+
+/**
+ * 【追加機能2】アーカイブされたTodo要素を作成
+ * @param {Object} todo - Todoオブジェクト
+ * @returns {HTMLElement} Todo要素
+ */
+function createArchivedTodoElement(todo) {
+  const todoItem = document.createElement('div');
+  todoItem.className = `todo-item archived-item status-${todo.status}`;
+  todoItem.dataset.id = todo.id;
+
+  // Todoの内容エリア
+  const todoContent = document.createElement('div');
+  todoContent.className = 'todo-content';
+
+  // Todoのテキスト
+  const todoText = document.createElement('span');
+  todoText.className = 'todo-text';
+  todoText.textContent = todo.text;
+
+  // ステータスバッジ
+  const statusBadge = document.createElement('span');
+  statusBadge.className = `status-badge status-${todo.status}`;
+  statusBadge.textContent = STATUS_LABELS[todo.status];
+
+  todoContent.appendChild(todoText);
+  todoContent.appendChild(statusBadge);
+
+  // コントロールエリア
+  const todoControls = document.createElement('div');
+  todoControls.className = 'todo-controls';
+
+  // 復元ボタン
+  const restoreButton = document.createElement('button');
+  restoreButton.className = 'restore-button';
+  restoreButton.textContent = '復元';
+  restoreButton.addEventListener('click', () => {
+    unarchiveTodo(todo.id);
+    renderTodos();
+    showNotification('Todoを復元しました');
+  });
+
+  // 削除ボタン
+  const deleteButton = document.createElement('button');
+  deleteButton.className = 'delete-button';
+  deleteButton.textContent = '削除';
+  deleteButton.addEventListener('click', () => {
+    if (confirm(`「${todo.text}」を完全に削除しますか？`)) {
+      deleteTodo(todo.id);
+      renderTodos();
+      showNotification('Todoを削除しました');
+    }
+  });
+
+  todoControls.appendChild(restoreButton);
+  todoControls.appendChild(deleteButton);
+
   todoItem.appendChild(todoContent);
   todoItem.appendChild(todoControls);
 
@@ -164,6 +320,7 @@ function showNotification(message) {
 /**
  * Todo追加フォームの初期化
  * 【改善】Enterキー対応、バリデーション、自動フォーカス
+ * 【追加機能2】アーカイブトグルの初期化
  */
 export function initAddTodoForm() {
   const form = document.getElementById('add-todo-form');
@@ -209,6 +366,20 @@ export function initAddTodoForm() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
+    }
+  });
+
+  // 【追加機能2】アーカイブトグルの初期化
+  const toggleArchiveButton = document.getElementById('toggle-archive');
+  const archiveList = document.getElementById('archive-list');
+
+  toggleArchiveButton.addEventListener('click', () => {
+    if (archiveList.style.display === 'none') {
+      archiveList.style.display = 'block';
+      toggleArchiveButton.textContent = '非表示';
+    } else {
+      archiveList.style.display = 'none';
+      toggleArchiveButton.textContent = '表示/非表示';
     }
   });
 }
