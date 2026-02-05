@@ -40,9 +40,10 @@ function saveTodos(todos) {
  * 新しいTodoを追加
  * @param {string} text - Todoの内容
  * @param {string} status - Todoのステータス（"todo" | "doing" | "done"）
+ * @param {string|null} dueDate - 期日（YYYY-MM-DD形式、任意）
  * @returns {Object} 追加されたTodo
  */
-export function addTodo(text, status = 'todo') {
+export function addTodo(text, status = 'todo', dueDate = null) {
   const todos = getTodos();
 
   // 新しいIDを生成（既存の最大ID + 1）
@@ -55,7 +56,8 @@ export function addTodo(text, status = 'todo') {
     text: text.trim(),
     status: status,
     createdAt: new Date().toISOString(), // 作成日時を記録（ソート用）
-    archived: false // 【追加機能2】アーカイブフラグを追加
+    archived: false, // 【追加機能2】アーカイブフラグを追加
+    dueDate: dueDate // 【追加機能4】期日を追加
   };
 
   todos.push(newTodo);
@@ -191,4 +193,24 @@ export function getStatusSummary() {
     done: todos.filter(t => t.status === 'done').length,
     total: todos.length
   };
+}
+
+/**
+ * 【追加機能4】Todoの期日を更新
+ * @param {number} id - 更新するTodoのID
+ * @param {string|null} dueDate - 新しい期日（YYYY-MM-DD形式、nullで削除）
+ * @returns {Object|null} 更新されたTodo、見つからない場合はnull
+ */
+export function updateTodoDueDate(id, dueDate) {
+  const todos = getTodos();
+  const todo = todos.find(todo => todo.id === id);
+
+  if (!todo) {
+    return null;
+  }
+
+  todo.dueDate = dueDate;
+  saveTodos(todos);
+
+  return todo;
 }

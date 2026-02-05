@@ -16,7 +16,8 @@ import {
   getArchivedTodos,
   archiveTodo,
   unarchiveTodo,
-  getStatusSummary
+  getStatusSummary,
+  updateTodoDueDate
 } from './todoManager.js';
 
 // ステータスの日本語表示名
@@ -25,6 +26,43 @@ const STATUS_LABELS = {
   doing: '処理中',
   done: '完了'
 };
+
+/**
+ * 【追加機能4】期日の緊急度を判定
+ * @param {string} dueDate - 期日（YYYY-MM-DD形式）
+ * @returns {string} 緊急度レベル（'overdue' | 'urgent' | 'normal' | null）
+ */
+function getDueDateUrgency(dueDate) {
+  if (!dueDate) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+
+  const diffTime = due - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return 'overdue';
+  if (diffDays <= 3) return 'urgent';
+  return 'normal';
+}
+
+/**
+ * 【追加機能4】期日を読みやすい形式でフォーマット
+ * @param {string} dueDate - 期日（YYYY-MM-DD形式）
+ * @returns {string} フォーマット済み期日
+ */
+function formatDueDate(dueDate) {
+  if (!dueDate) return '';
+
+  const date = new Date(dueDate);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  return `${month}/${day}`;
+}
 
 /**
  * Todo一覧を描画
@@ -165,6 +203,16 @@ function createTodoElement(todo) {
   statusBadge.textContent = STATUS_LABELS[todo.status];
 
   todoContent.appendChild(todoText);
+
+  // 【追加機能4】期日表示
+  if (todo.dueDate) {
+    const dueDateBadge = document.createElement('span');
+    const urgency = getDueDateUrgency(todo.dueDate);
+    dueDateBadge.className = `due-date-badge ${urgency ? `urgency-${urgency}` : ''}`;
+    dueDateBadge.textContent = `📅 ${formatDueDate(todo.dueDate)}`;
+    todoContent.appendChild(dueDateBadge);
+  }
+
   todoContent.appendChild(statusBadge);
 
   // コントロールエリア
@@ -261,6 +309,16 @@ function createArchivedTodoElement(todo) {
   statusBadge.textContent = STATUS_LABELS[todo.status];
 
   todoContent.appendChild(todoText);
+
+  // 【追加機能4】期日表示
+  if (todo.dueDate) {
+    const dueDateBadge = document.createElement('span');
+    const urgency = getDueDateUrgency(todo.dueDate);
+    dueDateBadge.className = `due-date-badge ${urgency ? `urgency-${urgency}` : ''}`;
+    dueDateBadge.textContent = `📅 ${formatDueDate(todo.dueDate)}`;
+    todoContent.appendChild(dueDateBadge);
+  }
+
   todoContent.appendChild(statusBadge);
 
   // コントロールエリア
@@ -321,11 +379,13 @@ function showNotification(message) {
  * Todo追加フォームの初期化
  * 【改善】Enterキー対応、バリデーション、自動フォーカス
  * 【追加機能2】アーカイブトグルの初期化
+ * 【追加機能4】期日入力対応
  */
 export function initAddTodoForm() {
   const form = document.getElementById('add-todo-form');
   const input = document.getElementById('todo-input');
   const statusSelect = document.getElementById('todo-status');
+  const dueDateInput = document.getElementById('todo-duedate');
 
   // フォーム送信処理（EnterキーとSubmitボタンで共通化）
   const handleSubmit = (e) => {
@@ -333,6 +393,7 @@ export function initAddTodoForm() {
 
     const text = input.value.trim();
     const status = statusSelect.value;
+    const dueDate = dueDateInput.value || null;
 
     // 入力値のバリデーション
     if (!text) {
@@ -342,7 +403,7 @@ export function initAddTodoForm() {
     }
 
     // Todoを追加し、即座にlocalStorageへ保存
-    addTodo(text, status);
+    addTodo(text, status, dueDate);
 
     // 成功通知
     showNotification(`「${text}」を追加しました`);
@@ -350,6 +411,7 @@ export function initAddTodoForm() {
     // フォームをリセット
     input.value = '';
     statusSelect.value = 'todo';
+    dueDateInput.value = '';
 
     // 一覧を即座に再描画
     renderTodos();
