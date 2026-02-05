@@ -214,3 +214,28 @@ export function updateTodoDueDate(id, dueDate) {
 
   return todo;
 }
+
+/**
+ * Todoのテキストを更新
+ * @param {number} id - 更新するTodoのID
+ * @param {string} newText - 新しいテキスト
+ * @returns {Object|null} 更新されたTodo、見つからない場合はnull
+ */
+export function updateTodoText(id, newText) {
+  const todos = getTodos();
+  const todo = todos.find(todo => todo.id === id);
+
+  if (!todo) {
+    return null;
+  }
+
+  const trimmedText = newText.trim();
+  if (!trimmedText) {
+    return null;
+  }
+
+  todo.text = trimmedText;
+  saveTodos(todos);
+
+  return todo;
+}

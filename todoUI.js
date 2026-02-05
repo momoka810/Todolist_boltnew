@@ -17,7 +17,8 @@ import {
   archiveTodo,
   unarchiveTodo,
   getStatusSummary,
-  updateTodoDueDate
+  updateTodoDueDate,
+  updateTodoText
 } from './todoManager.js';
 
 // ステータスの日本語表示名
@@ -192,17 +193,74 @@ function createTodoElement(todo) {
   const todoContent = document.createElement('div');
   todoContent.className = 'todo-content';
 
-  // Todoのテキスト
+  // Todoのテキストと編集機能
+  const todoTextContainer = document.createElement('div');
+  todoTextContainer.className = 'todo-text-container';
+
   const todoText = document.createElement('span');
   todoText.className = 'todo-text';
   todoText.textContent = todo.text;
+  todoText.style.cursor = 'pointer';
+  todoText.title = 'クリックして編集';
+
+  // テキスト編集用の入力欄（初期状態は非表示）
+  const todoTextInput = document.createElement('input');
+  todoTextInput.type = 'text';
+  todoTextInput.className = 'todo-text-edit-input';
+  todoTextInput.value = todo.text;
+  todoTextInput.style.display = 'none';
+
+  // テキストクリックで編集モードに切り替え
+  todoText.addEventListener('click', () => {
+    todoText.style.display = 'none';
+    todoTextInput.style.display = 'inline-block';
+    todoTextInput.focus();
+    todoTextInput.select();
+  });
+
+  // テキスト変更時の処理
+  const saveTextEdit = () => {
+    const newText = todoTextInput.value.trim();
+    if (newText && newText !== todo.text) {
+      const result = updateTodoText(todo.id, newText);
+      if (result) {
+        renderTodos();
+        showNotification('Todoを更新しました');
+      } else {
+        showNotification('Todoの更新に失敗しました');
+      }
+    } else {
+      todoTextInput.style.display = 'none';
+      todoText.style.display = 'inline';
+    }
+  };
+
+  // Enterキーで保存
+  todoTextInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveTextEdit();
+    } else if (e.key === 'Escape') {
+      todoTextInput.value = todo.text;
+      todoTextInput.style.display = 'none';
+      todoText.style.display = 'inline';
+    }
+  });
+
+  // フォーカスが外れたら保存
+  todoTextInput.addEventListener('blur', () => {
+    saveTextEdit();
+  });
+
+  todoTextContainer.appendChild(todoText);
+  todoTextContainer.appendChild(todoTextInput);
 
   // ステータスバッジ（視覚的な状態表示）
   const statusBadge = document.createElement('span');
   statusBadge.className = `status-badge status-${todo.status}`;
   statusBadge.textContent = STATUS_LABELS[todo.status];
 
-  todoContent.appendChild(todoText);
+  todoContent.appendChild(todoTextContainer);
 
   // 【追加機能4】期日表示と編集
   const dueDateContainer = document.createElement('div');
